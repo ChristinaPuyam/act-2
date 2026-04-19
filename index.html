@@ -1,98 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Management System</title>
+    <title>AWS Student Portal</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h2 { color: #333; text-align: center; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background-color: #ff9900; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        button:hover { background-color: #e68a00; }
-        .student-list { margin-top: 20px; border-top: 2px solid #eee; padding-top: 20px; }
-        .student-item { background: #fff; padding: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; }
-        .student-item:last-child { border-bottom: none; }
+        body { font-family: sans-serif; text-align: center; background: #f4f4f4; padding: 50px; }
+        .box { background: white; padding: 20px; border-radius: 10px; display: inline-block; box-shadow: 0 0 10px #ccc; }
+        input { display: block; width: 250px; margin: 10px auto; padding: 10px; }
+        button { background: #ff9900; color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h2>Add New Student</h2>
-    <input type="text" id="name" placeholder="Full Name">
-    <input type="email" id="email" placeholder="Email Address">
-    <input type="text" id="course" placeholder="Course Name">
-    <button onclick="addStudent()">Add Student</button>
-
-    <div class="student-list">
-        <h2>Enrolled Students</h2>
-        <div id="displayArea">Loading students...</div>
+    <div class="box">
+        <h2>Add Student</h2>
+        <input type="text" id="name" placeholder="Name">
+        <input type="text" id="email" placeholder="Email">
+        <input type="text" id="course" placeholder="Course">
+        <button onclick="saveStudent()">Add to AWS</button>
+        <p id="msg"></p>
     </div>
-</div>
 
-<script>
-    // YOUR API URL (The one we tested)
-    const API_URL = "https://pq7t5r5anf.execute-api.eu-north-1.amazonaws.com/prod/students";
+    <script>
+        // YOUR EXACT PROD URL
+        const API_URL = "https://pq7t5r5anf.execute-api.eu-north-1.amazonaws.com/prod/students";
 
-    // 1. Function to GET students and show them on the screen
-    async function loadStudents() {
-        try {
-            const response = await fetch(API_URL);
-            const data = await response.json();
-            
-            const displayArea = document.getElementById("displayArea");
-            if (data.length === 0) {
-                displayArea.innerHTML = "<p style='text-align:center;'>No students found. Add one above!</p>";
-            } else {
-                displayArea.innerHTML = data.map(s => `
-                    <div class="student-item">
-                        <span><strong>${s.name}</strong> (${s.course})</span>
-                        <small>${s.email}</small>
-                    </div>
-                `).join('');
-            }
-        } catch (error) {
-            console.error("Error loading students:", error);
-        }
-    }
+        async function saveStudent() {
+            const data = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                course: document.getElementById('course').value
+            };
 
-    // 2. Function to POST (Add) a student to AWS
-    async function addStudent() {
-        const name = document.getElementById("name").value;
-        const email = document.getElementById("email").value;
-        const course = document.getElementById("course").value;
-
-        if (!name || !email || !course) {
-            alert("Please fill all fields");
-            return;
-        }
-
-        try {
             const response = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, course })
+                body: JSON.stringify(data)
             });
 
             if (response.ok) {
-                alert("Student added to AWS successfully!");
-                // Clear the boxes
-                document.getElementById("name").value = "";
-                document.getElementById("email").value = "";
-                document.getElementById("course").value = "";
-                // Refresh the list automatically
-                loadStudents();
+                alert("Success! Data sent to DynamoDB.");
+                location.reload(); // Refreshes to show you want to add more
+            } else {
+                alert("Error! Check Lambda logs.");
             }
-        } catch (error) {
-            alert("Error adding student. Check console.");
-            console.error(error);
         }
-    }
-
-    // Load the list as soon as the page opens
-    loadStudents();
-</script>
-
+    </script>
 </body>
 </html>
